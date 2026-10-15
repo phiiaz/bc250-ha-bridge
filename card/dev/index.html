@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- Dev preview with mock data. Run: cd card && npm run build && python3 -m http.server 8123 --directory .. -->
+<!-- then open http://localhost:8123/card/dev/index.html -->
+<meta charset="utf-8" />
+<title>bc250-card preview</title>
+<style>
+  body { margin: 0; padding: 24px; background: #111318; font-family: Roboto, sans-serif; display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .wrap { width: 460px; }
+  ha-card { display: block; border-radius: 16px; --card-background-color: #1c1e24; --primary-text-color: #e5e5e5; --secondary-text-color: #9aa0a6; --primary-color: #03a9f4; --divider-color: #444; color: #e5e5e5; }
+  ha-icon { display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: currentColor; opacity: .5; vertical-align: middle; }
+</style>
+<div class="wrap" id="a"></div>
+<div class="wrap" id="b"></div>
+<div class="wrap" id="c"></div>
+<script type="module">
+  import "../../dist/bc250-card.js";
+  const D = "dev1";
+  const P = "bazzite_bc_250_";
+  const mk = (id, state, attributes = {}) => [id, { entity_id: id, state: String(state), attributes }];
+  const states = Object.fromEntries([
+    mk(`sensor.${P}cpu_temperature`, 38.1), mk(`sensor.${P}gpu_temperature`, 71.4),
+    mk(`sensor.${P}nvme_temperature`, 25.9), mk(`sensor.${P}gpu_clock`, 1850),
+    mk(`sensor.${P}gpu_load`, 62), mk(`sensor.${P}pump_speed`, 1726),
+    mk(`sensor.${P}ram_used`, 22.4), mk(`sensor.${P}swap_used`, 0), mk(`sensor.${P}home_disk_used`, 37),
+    mk(`sensor.${P}uptime`, 93784), mk(`sensor.${P}current_steam_game`, "Hades II"),
+    mk(`sensor.${P}active_cus_config`, 40), mk(`sensor.${P}config_voltage_at_max_clock`, 1000),
+    mk(`sensor.${P}gpu_throttle_temperature`, 85),
+    ...["sleep", "reboot", "shut_down", "close_current_game", "restart_steam", "switch_to_desktop_mode",
+        "switch_to_game_mode", "advanced_reset_gpu_clock_range"].map((n) => mk(`button.${P}${n}`, "unknown")),
+    mk("button.wake_on_lan", "unknown"),
+    mk(`number.${P}advanced_gpu_max_clock`, 2000, { min: 1000, max: 2200, step: 50 }),
+    mk(`number.${P}advanced_gpu_min_clock`, 1000, { min: 1000, max: 2200, step: 50 }),
+  ]);
+  const entities = Object.fromEntries(Object.keys(states).filter((i) => !i.includes("wake")).map((i) => [i, { entity_id: i, device_id: D }]));
+  const now = Date.now() / 1000;
+  const wave = (base, amp, n = 200) => Array.from({ length: n }, (_, i) => ({ s: String(base + amp * Math.sin(i / 9) + Math.random() * amp * .3), lu: now - (n - i) * 100 }));
+  const hist = {
+    [`sensor.${P}cpu_temperature`]: wave(38, 6), [`sensor.${P}gpu_temperature`]: wave(60, 10),
+    [`sensor.${P}nvme_temperature`]: wave(26, 2), [`sensor.${P}gpu_clock`]: wave(1500, 450),
+    [`sensor.${P}gpu_load`]: wave(50, 40),
+  };
+  const mkHass = (overrides = {}) => ({
+    states, entities, language: "en", devices: { [D]: { id: D, name: "Bazzite BC-250" } },
+    callService: async (...a) => console.log("callService", ...a),
+    callWS: async (m) => (m.type === "history/history_during_period" ? hist : Promise.reject(new Error("not admin"))),
+    ...overrides,
+  });
+  const offStates = Object.fromEntries(Object.entries(states).map(([id, s]) =>
+    [id, id.includes("wake") ? s : { ...s, state: "unavailable" }]));
+  for (const [id, cfg, off] of [["a", { device_id: D, wol_entity: "button.wake_on_lan", show_advanced: true }, false],
+                                ["b", { device_id: D, glass: true }, false],
+                                ["c", { device_id: D, wol_entity: "button.wake_on_lan", show_advanced: true }, true]]) {
+    const el = document.createElement("bc250-card");
+    el.setConfig({ type: "custom:bc250-card", ...cfg });
+    el.hass = mkHass(off ? { states: offStates } : {});
+    document.getElementById(id).append(el);
+  }
+  // Click the heading area of card A to flip it off/on and see the transition.
+  let flipped = false;
+  document.getElementById("a").addEventListener("dblclick", () => {
+    flipped = !flipped;
+    document.querySelector("#a bc250-card").hass = mkHass(flipped ? { states: offStates } : {});
+  });
+</script>

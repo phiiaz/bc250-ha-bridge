@@ -10,22 +10,17 @@ system-wide besides a systemd unit (and optionally a polkit rule).
 > Built for one specific, heavily modified board. Read **Safety** before enabling the
 > Advanced controls.
 
-## Screenshots
+The `bc250-card` custom card, as it looks in Home Assistant.
 
-Main view: gauges, history graphs and system tiles.
+| Online | Machine off or asleep | Advanced panel open |
+|---|---|---|
+| ![Online](docs/card-main.png) | ![Off state](docs/card-off.png) | ![Advanced](docs/card-advanced.png) |
 
-![Main dashboard view](docs/dashboard-main.webp)
+When the machine is off, everything is locked except **Wake up**. Destructive buttons ask for
+confirmation, and the GPU clock panel is collapsed unless `show_advanced: true`.
 
-Power and session controls (destructive buttons ask for confirmation).
-
-![Power and session controls](docs/dashboard-controls.webp)
-
-The separate Advanced view: GPU clock range, with read-only voltage and CU values.
-
-![Advanced view](docs/dashboard-advanced.webp)
-
-The background photo and the frosted-glass theme are personal choices and are not part of
-this repo. The dashboard file uses plain built-in cards.
+The background photo and the frosted-glass theme in these screenshots are personal choices and
+are not part of this repo (the card itself has a `glass: true` option for a similar look).
 
 ## What you get
 
@@ -82,13 +77,46 @@ sudo cp polkit/50-bc250-ha-bridge-power.rules /etc/polkit-1/rules.d/
 
 Skip it if you do not want the power buttons; they will just log an error.
 
-### Dashboard
+### Dashboard card
 
-`homeassistant/dashboard.yaml` uses built-in cards only (HA 2024.x+, sections layout). Create a
-dashboard, open the Raw configuration editor and paste it. Entity IDs assume a fresh install
-(`sensor.bazzite_bc_250_*`). If your IDs differ, fix them in the file. Replace
-`button.wake_on_lan` with the button from your Wake on LAN integration. Destructive buttons ask
-for confirmation.
+The dashboard is a single custom Lovelace card, `custom:bc250-card` (source in `card/`, built
+file in `dist/bc250-card.js`). Pick the device and you get vitals gauges, history graphs, system
+tiles, power/session buttons (destructive ones ask for confirmation) and an optional, collapsed
+Advanced panel for the GPU clock range.
+
+**Install with HACS:** HACS → ⋮ → Custom repositories → add
+`https://github.com/phiiaz/bc250-ha-bridge`, category **Dashboard**, then download *BC-250 Card*
+and reload the browser.
+
+**Or manually:** copy `dist/bc250-card.js` to `/config/www/bc250-card.js`, add a resource
+(Settings → Dashboards → Resources) with URL `/local/bc250-card.js`, type *JavaScript module*.
+
+Add the card from the card picker (visual editor), or in YAML:
+
+```yaml
+type: custom:bc250-card
+device_id: YOUR_DEVICE_ID          # required: the "Bazzite BC-250" device
+wol_entity: button.wake_on_lan     # optional: your Wake on LAN button, enables "Wake up"
+show_advanced: false               # GPU clock range panel (collapsed by default)
+show_history: true
+history_hours: 6
+confirm_actions: true
+glass: false                       # frosted-glass look
+# name, accent_color, background_color, sections: [header, vitals, history, system, actions]
+```
+
+`device_id` is the device registry ID: select the device in the editor, or copy it from the
+device page URL. Entities are found by their `unique_id`, falling back to the default entity
+names, so renamed entities keep working (the unique_id lookup needs an admin user).
+`homeassistant/dashboard.yaml` is a ready dashboard containing just this card.
+`homeassistant/dashboard-legacy.yaml` is the old stock-cards dashboard, deprecated and kept for
+one release.
+
+The card only validates the clock range for convenience: `publisher.py` still enforces the
+limits on the machine.
+
+Build it yourself: `cd card && npm install && npm test && npm run build`.
+
 
 ### Wake on LAN
 
@@ -129,7 +157,11 @@ from sleep or from a full shutdown depends on its BIOS. Test both.
 | `env.example` | Credentials template |
 | `systemd/bc250-ha-bridge.service` | System unit |
 | `polkit/50-bc250-ha-bridge-power.rules` | Optional power-control permission |
-| `homeassistant/dashboard.yaml` | Dashboard |
+| `card/` | Source of the `bc250-card` Lovelace card (TypeScript + Lit) |
+| `dist/bc250-card.js` | Built card (what HACS / `/local` serves) |
+| `hacs.json` | HACS metadata (Dashboard category) |
+| `homeassistant/dashboard.yaml` | Dashboard with the card |
+| `homeassistant/dashboard-legacy.yaml` | Deprecated stock-cards dashboard |
 
 ## License
 

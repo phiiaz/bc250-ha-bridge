@@ -1,0 +1,27 @@
+name: card
+
+on:
+  push:
+    paths: ["card/**", ".github/workflows/card.yml"]
+  pull_request:
+    paths: ["card/**", ".github/workflows/card.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: card
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: card/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: dist is up to date
+        run: git diff --exit-code ../dist/bc250-card.js
