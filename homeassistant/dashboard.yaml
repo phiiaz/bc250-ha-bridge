@@ -1,0 +1,294 @@
+# Bazzite BC-250 dashboard for Home Assistant.
+# Built-in cards only (no HACS). Needs a recent HA (sections view, 2024.x+).
+#
+# Install: Settings -> Dashboards -> Add dashboard -> "New dashboard from scratch",
+# open it, three-dot menu -> Edit dashboard -> three-dot menu -> Raw configuration editor,
+# select all, paste this file, Save.
+#
+# Entity IDs below are the ones HA normally generates (device "Bazzite BC-250" + entity name).
+# If a card says "Entity not available", find the real ID in Developer tools -> States
+# (filter "bazzite") and fix it here. The Wake on LAN button is YOURS: replace
+# button.wake_on_lan below with whatever your Wake on LAN integration created.
+title: Bazzite
+views:
+  # ───────────────────────────── Main view ─────────────────────────────
+  - title: Bazzite
+    path: bazzite
+    icon: mdi:controller
+    type: sections
+    max_columns: 3
+    sections:
+      # ---- Now playing + vitals ----
+      - type: grid
+        cards:
+          - type: heading
+            heading: Now
+            heading_style: title
+            icon: mdi:gamepad-variant
+          - type: tile
+            entity: sensor.bazzite_bc_250_current_steam_game
+            name: Playing
+            icon: mdi:gamepad-variant
+            vertical: true
+            grid_options: {columns: full}
+          - type: gauge
+            entity: sensor.bazzite_bc_250_cpu_temperature
+            name: CPU
+            min: 20
+            max: 100
+            needle: true
+            severity: {green: 0, yellow: 70, red: 85}
+            grid_options: {columns: 4}
+          - type: gauge
+            entity: sensor.bazzite_bc_250_gpu_temperature
+            name: GPU
+            min: 20
+            max: 100
+            needle: true
+            severity: {green: 0, yellow: 70, red: 85}
+            grid_options: {columns: 4}
+          - type: gauge
+            entity: sensor.bazzite_bc_250_gpu_load
+            name: GPU load
+            min: 0
+            max: 100
+            severity: {green: 0, yellow: 85, red: 98}
+            grid_options: {columns: 4}
+
+      # ---- Graphs ----
+      - type: grid
+        cards:
+          - type: heading
+            heading: Performance
+            icon: mdi:chart-line
+          - type: history-graph
+            title: Temperatures
+            hours_to_show: 6
+            entities:
+              - entity: sensor.bazzite_bc_250_cpu_temperature
+                name: CPU
+              - entity: sensor.bazzite_bc_250_gpu_temperature
+                name: GPU
+              - entity: sensor.bazzite_bc_250_nvme_temperature
+                name: NVMe
+          - type: history-graph
+            title: GPU clock and load
+            hours_to_show: 6
+            entities:
+              - entity: sensor.bazzite_bc_250_gpu_clock
+                name: Clock (MHz)
+              - entity: sensor.bazzite_bc_250_gpu_load
+                name: Load (%)
+
+      # ---- System details ----
+      - type: grid
+        cards:
+          - type: heading
+            heading: System
+            icon: mdi:chip
+          - type: tile
+            entity: sensor.bazzite_bc_250_gpu_clock
+            name: GPU clock
+            grid_options: {columns: 6}
+          - type: tile
+            entity: sensor.bazzite_bc_250_pump_speed
+            name: Pump
+            grid_options: {columns: 6}
+          - type: tile
+            entity: sensor.bazzite_bc_250_ram_used
+            name: RAM
+            grid_options: {columns: 6}
+          - type: tile
+            entity: sensor.bazzite_bc_250_swap_used
+            name: Swap
+            grid_options: {columns: 6}
+          - type: tile
+            entity: sensor.bazzite_bc_250_home_disk_used
+            name: Disk
+            grid_options: {columns: 6}
+          - type: tile
+            entity: sensor.bazzite_bc_250_uptime
+            name: Uptime
+            grid_options: {columns: 6}
+          - type: tile
+            entity: sensor.bazzite_bc_250_active_cus_config
+            name: CUs
+            grid_options: {columns: 6}
+          - type: tile
+            entity: sensor.bazzite_bc_250_gpu_throttle_temperature
+            name: Throttle at
+            grid_options: {columns: 6}
+
+      # ---- Power ----
+      - type: grid
+        cards:
+          - type: heading
+            heading: Power
+            icon: mdi:power
+          - type: tile
+            entity: button.wake_on_lan   # <- replace with your Wake on LAN button
+            name: Wake up
+            icon: mdi:alarm-light
+            color: green
+            vertical: true
+            grid_options: {columns: 6}
+          - type: tile
+            entity: button.bazzite_bc_250_sleep
+            name: Sleep
+            color: blue
+            vertical: true
+            grid_options: {columns: 6}
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_sleep}
+              confirmation: {text: "Put Bazzite to sleep?"}
+          - type: tile
+            entity: button.bazzite_bc_250_reboot
+            name: Reboot
+            color: orange
+            vertical: true
+            grid_options: {columns: 6}
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_reboot}
+              confirmation: {text: "Reboot Bazzite now? Running games will be lost."}
+          - type: tile
+            entity: button.bazzite_bc_250_shut_down
+            name: Shut down
+            color: red
+            vertical: true
+            grid_options: {columns: 6}
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_shut_down}
+              confirmation: {text: "Shut down Bazzite? Wake up works over the network."}
+
+      # ---- Session ----
+      - type: grid
+        cards:
+          - type: heading
+            heading: Session
+            icon: mdi:steam
+          - type: tile
+            entity: button.bazzite_bc_250_switch_to_game_mode
+            name: Game mode
+            icon: mdi:controller
+            vertical: true
+            grid_options: {columns: 6}
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_switch_to_game_mode}
+              confirmation: {text: "Switch to Game mode? This ends the current session."}
+          - type: tile
+            entity: button.bazzite_bc_250_switch_to_desktop_mode
+            name: Desktop
+            icon: mdi:desktop-tower-monitor
+            vertical: true
+            grid_options: {columns: 6}
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_switch_to_desktop_mode}
+              confirmation: {text: "Switch to Desktop mode? This ends the current session."}
+          - type: tile
+            entity: button.bazzite_bc_250_restart_steam
+            name: Restart Steam
+            vertical: true
+            grid_options: {columns: 6}
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_restart_steam}
+              confirmation: {text: "Restart Steam? The running game will close."}
+          - type: tile
+            entity: button.bazzite_bc_250_close_current_game
+            name: Close game
+            color: red
+            vertical: true
+            grid_options: {columns: 6}
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_close_current_game}
+              confirmation: {text: "Close the running game? Unsaved progress will be lost."}
+
+  # ───────────────────────── Advanced / danger view ─────────────────────────
+  - title: Advanced
+    path: advanced
+    icon: mdi:alert
+    type: sections
+    max_columns: 2
+    badges: []
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: GPU clock range
+            icon: mdi:alert
+          - type: markdown
+            content: >
+              **Danger zone.** These change the GPU governor's range at runtime.
+              Limits are enforced on the machine: **1000 to 2200 MHz, steps of 50**.
+              Changes are **not saved**: a reboot, or a governor restart, resets
+              them to 1000 to 2000 MHz. Watch temperatures when raising the max
+              (throttle at 85 C). 2200 MHz is still being validated.
+          - type: gauge
+            entity: sensor.bazzite_bc_250_gpu_clock
+            name: GPU clock now
+            min: 500
+            max: 2400
+            needle: true
+            severity: {green: 0, yellow: 2000, red: 2200}
+            grid_options: {columns: 6}
+          - type: gauge
+            entity: sensor.bazzite_bc_250_gpu_temperature
+            name: GPU temp
+            min: 20
+            max: 100
+            needle: true
+            severity: {green: 0, yellow: 70, red: 85}
+            grid_options: {columns: 6}
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: number.bazzite_bc_250_advanced_gpu_max_clock
+                name: Max clock
+              - entity: number.bazzite_bc_250_advanced_gpu_min_clock
+                name: Min clock
+          - type: tile
+            entity: button.bazzite_bc_250_advanced_reset_gpu_clock_range
+            name: Reset to 1000 to 2000 MHz
+            icon: mdi:backup-restore
+            color: green
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target: {entity_id: button.bazzite_bc_250_advanced_reset_gpu_clock_range}
+      - type: grid
+        cards:
+          - type: heading
+            heading: Read-only tuning values
+            icon: mdi:eye
+          - type: markdown
+            content: >
+              Voltage and CU count cannot be changed from here by design: a bad
+              value can hang the machine. Edit them on the machine itself, with a backup.
+          - type: tile
+            entity: sensor.bazzite_bc_250_config_voltage_at_max_clock
+            name: Config voltage at max clock
+          - type: tile
+            entity: sensor.bazzite_bc_250_active_cus_config
+            name: Active CUs (config)
+          - type: tile
+            entity: sensor.bazzite_bc_250_gpu_throttle_temperature
+            name: Throttle temperature
+          - type: history-graph
+            title: Clock vs temperature
+            hours_to_show: 3
+            entities:
+              - entity: sensor.bazzite_bc_250_gpu_clock
+              - entity: sensor.bazzite_bc_250_gpu_temperature

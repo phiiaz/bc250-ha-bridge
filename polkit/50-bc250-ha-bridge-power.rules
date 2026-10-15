@@ -1,0 +1,8 @@
+// Let the bridge's user reboot/power off/suspend without a login session.
+// Replace YOUR_USER. Deliberately excludes the *-ignore-inhibit actions.
+polkit.addRule(function(action, subject) {
+    if (subject.user == "YOUR_USER" &&
+        /^org\.freedesktop\.login1\.(reboot|power-off|suspend)(-multiple-sessions)?$/.test(action.id)) {
+        return polkit.Result.YES;
+    }
+});

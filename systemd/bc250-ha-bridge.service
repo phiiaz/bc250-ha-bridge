@@ -1,0 +1,17 @@
+[Unit]
+Description=BC-250 sensors and controls for Home Assistant over MQTT
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+# Replace YOUR_USER with the account that owns the Steam session and the env file.
+User=YOUR_USER
+Environment=BRIDGE_ENV=/home/YOUR_USER/.config/bc250-ha-bridge/env
+ExecStart=/usr/bin/python3 -I /home/YOUR_USER/bc250-ha-bridge/publisher.py
+Restart=always
+RestartSec=15
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target
