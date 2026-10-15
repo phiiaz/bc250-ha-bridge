@@ -10,6 +10,23 @@ system-wide besides a systemd unit (and optionally a polkit rule).
 > Built for one specific, heavily modified board. Read **Safety** before enabling the
 > Advanced controls.
 
+## Screenshots
+
+Main view: gauges, history graphs and system tiles.
+
+![Main dashboard view](docs/dashboard-main.webp)
+
+Power and session controls (destructive buttons ask for confirmation).
+
+![Power and session controls](docs/dashboard-controls.webp)
+
+The separate Advanced view: GPU clock range, with read-only voltage and CU values.
+
+![Advanced view](docs/dashboard-advanced.webp)
+
+The background photo and the frosted-glass theme are personal choices and are not part of
+this repo. The dashboard file uses plain built-in cards.
+
 ## What you get
 
 **Sensors** (HA MQTT discovery, published every 30 s): CPU / GPU / NVMe temperature, GPU clock,
