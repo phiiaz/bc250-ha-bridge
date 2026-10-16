@@ -2,3 +2,6 @@ env
 *.env
 __pycache__/
 *.bak*
+secrets.yaml
+.esphome/
+

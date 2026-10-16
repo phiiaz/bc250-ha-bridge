@@ -129,6 +129,32 @@ nmcli connection modify "Wired connection 1" 802-3-ethernet.wake-on-lan magic
 Then add HA's *Wake on LAN* integration with the PC's MAC address. Whether the board wakes
 from sleep or from a full shutdown depends on its BIOS. Test both.
 
+### ESPHome RLCD Desk Remote (Optional)
+
+`esphome/bazzite-rlcd-remote.yaml` turns a
+[Waveshare ESP32-S3-RLCD-4.2](https://docs.waveshare.com/ESP32-S3-RLCD-4.2) (4.2" 400×300
+monochrome reflective LCD, zero backlight power) into a desk status monitor and **Wake / Shut down**
+remote via Home Assistant:
+
+| Online | Shut down confirmation (2-step) |
+|---|---|
+| ![Online](docs/rlcd-online.jpg) | ![Confirm shut down](docs/rlcd-confirm-shutdown.jpg) |
+| **Offline (ready to wake)** | **Wake-on-LAN sent** |
+| ![Offline](docs/rlcd-offline.jpg) | ![Waking up](docs/rlcd-waking.jpg) |
+
+- **Screen**: online/offline status, current Steam game, 6-tile vitals grid (CPU/GPU temp, GPU
+  load, GPU clock, RAM used, pump RPM), onboard SHTC3 room temperature/humidity, and 18650 battery
+  percentage.
+- **Buttons**:
+  - When **offline**, pressing `KEY` (`GPIO18`) or `BOOT` (`GPIO0`) triggers `button.wake_on_lan`.
+  - When **online**, pressing `KEY` once arms a 5-second confirmation banner; pressing `KEY` a
+    second time triggers `button.bazzite_shut_down` (`BOOT` cancels).
+
+Flash with ESPHome (`cp esphome/secrets.yaml.example esphome/secrets.yaml && esphome run esphome/bazzite-rlcd-remote.yaml`),
+then in Home Assistant (**Settings → Devices & Services → ESPHome → Configure**) enable
+**"Allow the device to perform Home Assistant actions"**.
+
+
 ## Safety
 
 - **GPU clock control**: limits are enforced inside `publisher.py`
@@ -162,6 +188,9 @@ from sleep or from a full shutdown depends on its BIOS. Test both.
 | `hacs.json` | HACS metadata (Dashboard category) |
 | `homeassistant/dashboard.yaml` | Dashboard with the card |
 | `homeassistant/dashboard-legacy.yaml` | Deprecated stock-cards dashboard |
+| `esphome/bazzite-rlcd-remote.yaml` | Optional ESPHome config for Waveshare ESP32-S3-RLCD-4.2 |
+| `esphome/secrets.yaml.example` | ESPHome credentials template |
+
 
 ## License
 
